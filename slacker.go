@@ -1,4 +1,4 @@
-package main
+package slacker
 
 import (
 	"encoding/json"
@@ -22,6 +22,16 @@ type slackLoginResponse struct {
 	Error string       `json:"error"`
 	Url   string       `json:"url"`
 	Self  responseSelf `json:"self"`
+}
+
+type SlackChannel struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type slackListChannelsResponse struct {
+	Ok       bool           `json:"ok"`
+	Channels []SlackChannel `json:"channels"`
 }
 
 type responseSelf struct {
@@ -70,20 +80,31 @@ func (s *Slacker) Connect() error {
 	return nil
 }
 
-func (s *Slacker) ListChannels() (string, error) {
+func (s *Slacker) ListChannels() ([]SlackChannel, error) {
 	resp, err := http.Get("https://slack.com/api/channels.list?token=" + s.Token + "&pretty=1")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return "", errors.New("API request failure: " + resp.Status)
+		return nil, errors.New("API request failure: " + resp.Status)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(body), nil
+
+	var listResp slackListChannelsResponse
+	err = json.Unmarshal(body, &listResp)
+	if err != nil {
+		return nil, err
+	}
+
+	if !listResp.Ok {
+		return nil, errors.New("Error getting list of channels")
+	}
+
+	return listResp.Channels, nil
 }
 
 type SlackMessage struct {
