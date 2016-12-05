@@ -27,10 +27,13 @@ func main() {
 				name := matches[0][1]
 				s.SendMessage("Hi "+name+", I'm DadJokeBot.", msg.Channel)
 			}
-		} else if strings.Contains(msg.Text, "Tell me a joke.") {
-			s.SendMessage("What did the buffalo say to his son when he left for college?", msg.Channel)
-			time.Sleep(2000 * time.Millisecond)
-			s.SendMessage("Bison.", msg.Channel)
+		} else if strings.Contains(msg.Text, "ell me a joke") {
+			joke := strings.Replace(Joke(), "?", ".", -1)
+			lines := strings.Split(joke, ".")
+			for _, line := range lines {
+				s.SendMessage(line, msg.Channel)
+				time.Sleep(2000 * time.Millisecond)
+			}
 		}
 	}
 }
